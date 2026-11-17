@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Verify a certificate</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Serif+4:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span class="logo">GW</span>Goodness Studying Web</a></div></header>
+<div class="box auth"><h2>Verify a certificate</h2><input id="no" placeholder="Certificate number, e.g. GW-AB12CD34EF" aria-label="Certificate number"><button class="btn" id="go">Verify</button><div id="out" role="status"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const sb = supabase.createClient(CFG.url, CFG.key), out = document.getElementById('out'), inp = document.getElementById('no');
+async function check(){
+  const n = inp.value.trim(); if (!n) return;
+  const { data, error } = await sb.rpc('verify_certificate', { cert_no: n });
+  if (error) { out.textContent = 'Could not check right now. Try again.'; return; }
+  if (!data.length) { out.textContent = 'No certificate found with that number.'; return; }
+  const c = data[0];
+  out.replaceChildren(); const p = document.createElement('p');
+  p.textContent = 'Valid. Issued to ' + c.name + ' for ' + c.topic_name + ' on ' + new Date(c.issued_at).toLocaleDateString(undefined, { dateStyle: 'long' }) + '.';
+  out.append(p);
+}
+document.getElementById('go').addEventListener('click', check);
+inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+const q = new URLSearchParams(location.search).get('no'); if (q) { inp.value = q; check(); }
+</script></body></html>
